@@ -55,6 +55,7 @@ Interpreter::Interpreter()
                                                   const JsonComparator&);
     auto exactlyOne = bind(std::equal_to<size_t>{}, _1, 1);
     auto exactlyTwo = bind(std::equal_to<size_t>{}, _1, 2);
+    auto exactlyThree = bind(std::equal_to<size_t>{}, _1, 3);
     auto zeroOrMore = bind(std::greater_equal<size_t>{}, _1, 0);
     auto oneOrMore = bind(std::greater_equal<size_t>{}, _1, 1);
     auto mapPtr = static_cast<FunctionType>(&Interpreter::map);
@@ -119,8 +120,78 @@ Interpreter::Interpreter()
         {"type", Descriptor{exactlyOne, true,
                             bind(&Interpreter::type, this, _1)}},
         {"values", Descriptor{exactlyOne, true,
-                              bind(valuesPtr, this, _1)}}
+                              bind(valuesPtr, this, _1)}},
+        {"match_jersey", Descriptor{exactlyTwo, true,
+                              bind(&Interpreter::match_jersey, this, _1)}},
+        {"substring", Descriptor{exactlyThree, true,
+                              bind(&Interpreter::substring, this, _1)}},
     };
+}
+
+std::string Interpreter::convert_to_string(const Json& value)
+{
+    std::string ret;
+    // evaluate to either an integer or a float depending on the Json type
+    if (value.is_string())
+    {
+        ret = value.get<Json::string_t>();
+    }
+    else if (value.is_number())
+    {
+        if(value.is_number_float())
+            ret = std::to_string(int(value.get<Json::number_float_t>()));
+        else if (value.is_number_integer())
+            ret = std::to_string(value.get<Json::number_integer_t>());
+        else if (value.is_number_unsigned())
+            ret = std::to_string(value.get<Json::number_unsigned_t>());
+        else
+            BOOST_THROW_EXCEPTION(InvalidFunctionArgumentType());
+    }
+    else
+        BOOST_THROW_EXCEPTION(InvalidFunctionArgumentType());
+
+    return ret;
+}
+
+void Interpreter::match_jersey(FunctionArgumentList& arguments)
+{
+    // get our args
+    const Json& arg1 = getJsonArgument(arguments[0]);
+    const Json& arg2 = getJsonArgument(arguments[1]);
+
+    auto v1 = convert_to_string(arg1);
+    auto v2 = convert_to_string(arg2);
+
+    if (v1.length() < v2.length())
+        v1.insert(0, v2.length() - v1.length(), '0');
+    
+    if(v1 == v2)
+        m_context = true;
+    else
+        m_context = false;
+}
+
+void Interpreter::substring(FunctionArgumentList& arguments)
+{
+    // get our args
+    const Json& arg1 = getJsonArgument(arguments[0]);
+    const Json& arg2 = getJsonArgument(arguments[1]);
+    const Json& arg3 = getJsonArgument(arguments[2]);
+
+    // throw an exception if unexpected args
+    if (!arg1.is_number() && !arg2.is_number() && !arg3.is_string())
+    {
+        BOOST_THROW_EXCEPTION(InvalidFunctionArgumentType());
+    }
+
+    // grab our substring
+    if (arg1.is_number_integer() && arg2.is_number_integer())
+    {
+        auto const& s = arg3.get<Json::string_t>();
+        auto const& ret = s.substr(s.length() + arg1.get<Json::number_integer_t>(), arg2.get<Json::number_integer_t>());
+
+        m_context = ret;
+    }
 }
 
 void Interpreter::evaluateProjection(const ast::ExpressionNode *expression)
