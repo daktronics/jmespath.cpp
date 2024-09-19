@@ -235,6 +235,27 @@ private:
     template <typename JsonT>
     void visit(const ast::FilterExpressionNode* node, JsonT&& context);
     /** @}*/
+    
+    /**
+     * @brief parces callup number to give us a substring of embeded value
+     * @param[in] arguments The list of the function's arguments.
+     * @throws InvalidFunctionArgumentType
+     */
+    std::string convert_to_string(const Json& value);
+
+     /**
+     * @brief Matches jersey number to callup
+     * @param[in] arguments The list of the function's arguments.
+     */
+    void match_jersey(FunctionArgumentList& arguments);
+
+    /**
+     * @brief parces string and gives substring
+     * @param[in] arguments The list of the function's arguments.
+     * @throws InvalidFunctionArgumentType
+     */
+    void substring(FunctionArgumentList& arguments);
+
     /**
      * @brief Adjust the value of the slice endpoint to make sure it's within
      * the array's bounds and points to the correct item.
