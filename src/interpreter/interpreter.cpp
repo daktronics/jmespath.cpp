@@ -187,8 +187,13 @@ void Interpreter::substring(FunctionArgumentList& arguments)
     // grab our substring
     if (arg1.is_number_integer() && arg2.is_number_integer())
     {
+        auto const& i1 = arg1.get<Json::number_integer_t>();
+        auto const& i2 = arg2.get<Json::number_integer_t>();
         auto const& s = arg3.get<Json::string_t>();
-        auto const& ret = s.substr(s.length() + arg1.get<Json::number_integer_t>(), arg2.get<Json::number_integer_t>());
+
+        std::string ret = "";
+        if(s.length() >= std::abs(i1) + std::abs(i2))
+            ret = s.substr(s.length() + i1, i2);
 
         m_context = ret;
     }
