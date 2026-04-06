@@ -481,7 +481,7 @@ void Interpreter::visit(const ast::SliceExpressionNode* node, JsonT&& context)
         }
         if (!node->start)
         {
-            startIndex = step < 0 ? length - 1: 0;
+            startIndex = (step < 0 && length > 0) ? length - 1: 0;
         }
         else
         {
@@ -882,6 +882,10 @@ Index Interpreter::adjustSliceEndpoint(size_t length,
         {
             endpoint = step < 0 ? -1 : 0;
         }
+    }
+    else if (length == 0)
+    {
+        endpoint = step < 0 ? -1 : 0;
     }
     else if (endpoint >= length)
     {

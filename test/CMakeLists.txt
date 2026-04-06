@@ -62,6 +62,15 @@ if (JMESPATH_BUILD_TESTS)
     # configure the linked libraries
     target_link_libraries(${JMESPATH_UNITTEST_TARGET_NAME}
         ${JMESPATH_TARGET_NAME} Catch2 FakeIt)
+    # Force C++17 for the test target to avoid C++20 reversed comparison
+    # ambiguities with VariantNode::operator== and individual node operator==
+    set_target_properties(${JMESPATH_UNITTEST_TARGET_NAME} PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON)
+    # MSVC needs /bigobj for the large test translation units
+    if (MSVC)
+        target_compile_options(${JMESPATH_UNITTEST_TARGET_NAME} PRIVATE /bigobj)
+    endif()
     # add the necessary compile and link flags for generating test coverage if
     # the coverage info is enabled
     if (${JMESPATH_COVERAGE_INFO})
@@ -85,6 +94,15 @@ if (JMESPATH_BUILD_TESTS)
     # configure the linked libraries
     target_link_libraries(${JMESPATH_COMPLIANCETEST_TARGET_NAME}
         ${JMESPATH_TARGET_NAME} Catch2 FakeIt)
+    # Force C++17 for the test target to avoid C++20 reversed comparison
+    # ambiguities with VariantNode::operator== and individual node operator==
+    set_target_properties(${JMESPATH_COMPLIANCETEST_TARGET_NAME} PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON)
+    # MSVC needs /bigobj for the large test translation units
+    if (MSVC)
+        target_compile_options(${JMESPATH_COMPLIANCETEST_TARGET_NAME} PRIVATE /bigobj)
+    endif()
     # create a ctest test for executing the unit test target
     add_test(NAME ${JMESPATH_COMPLIANCETEST_TARGET_NAME}
         COMMAND ${JMESPATH_COMPLIANCETEST_TARGET_NAME}
