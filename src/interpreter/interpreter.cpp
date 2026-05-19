@@ -292,18 +292,17 @@ void Interpreter::visit(const ast::IdentifierNode *node)
 template <typename JsonT>
 void Interpreter::visit(const ast::IdentifierNode *node, JsonT &&context)
 {
-    // evaluete the identifier if the context holds an object
+    // evaluate the identifier if the context holds an object
     if (context.is_object())
     {
-        try
+        auto it = context.find(node->identifier);
+        if (it != context.end())
         {
             // assign either a const reference of the result or move the result
             // into the context depending on the type of the context parameter
-            m_context = assignContextValue(std::move(
-                                                context.at(node->identifier)));
+            m_context = assignContextValue(std::move(*it));
             return;
         }
-        catch (const nlohmann::json::out_of_range&) {}
     }
     // otherwise evaluate to null
     m_context = {};
