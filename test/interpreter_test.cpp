@@ -3222,6 +3222,38 @@ TEST_CASE("Interpreter")
                           InvalidFunctionArgumentType);
     }
 
+    SECTION("sort_by function sorts numbers with mixed signs")
+    {
+        ast::FunctionExpressionNode node{
+            "sort_by",
+            {ast::ExpressionNode{
+                ast::LiteralNode{"[{\"id\": 6}, {\"id\": -21}, {\"id\": 0}]"}},
+            ast::ExpressionArgumentNode{
+                ast::ExpressionNode{
+                    ast::IdentifierNode{"id"}}}}};
+
+        interpreter.visit(&node);
+
+        REQUIRE(interpreter.currentContext()
+                == "[{\"id\": -21}, {\"id\": 0}, {\"id\": 6}]"_json);
+    }
+
+    SECTION("sort_by function sorts integers mixed with floating point numbers")
+    {
+        ast::FunctionExpressionNode node{
+            "sort_by",
+            {ast::ExpressionNode{
+                ast::LiteralNode{"[{\"id\": 3}, {\"id\": 1.5}, {\"id\": -2.5}]"}},
+            ast::ExpressionArgumentNode{
+                ast::ExpressionNode{
+                    ast::IdentifierNode{"id"}}}}};
+
+        interpreter.visit(&node);
+
+        REQUIRE(interpreter.currentContext()
+                == "[{\"id\": -2.5}, {\"id\": 1.5}, {\"id\": 3}]"_json);
+    }
+
     SECTION("evaluates sort_by function with lvalue ref")
     {
         ast::FunctionExpressionNode node{
