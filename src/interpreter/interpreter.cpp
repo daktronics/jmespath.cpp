@@ -1416,6 +1416,13 @@ void Interpreter::sortBy(const ast::ExpressionNode* expression, Json&& array)
     // create a map for storing the results of the evaluated expression by
     // the hash value of the item
     std::unordered_map<size_t, Json> expressionResultsMap;
+    // JMESPath has a single number type, while nlohmann stores signed,
+    // unsigned and floating point numbers as distinct types, so the storage
+    // type must be collapsed before comparing the results to each other
+    auto jmespathType = [](const Json& value)
+    {
+        return value.is_number() ? Json::value_t::number_float : value.type();
+    };
     auto firstItemType = Json::value_t::discarded;
     // iterate over the items of the array
     for (auto& item: array)
@@ -1433,11 +1440,11 @@ void Interpreter::sortBy(const ast::ExpressionNode* expression, Json&& array)
         // store the type of the first expresion result
         if (firstItemType == Json::value_t::discarded)
         {
-            firstItemType = resultValue.type();
+            firstItemType = jmespathType(resultValue);
         }
         // if an expression result's type differs from the type of the first
         // result then throw an exception
-        else if (resultValue.type() != firstItemType)
+        else if (jmespathType(resultValue) != firstItemType)
         {
             BOOST_THROW_EXCEPTION(InvalidFunctionArgumentType());
         }
